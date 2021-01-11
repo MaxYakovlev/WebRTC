@@ -5,13 +5,15 @@
     <title>Index</title>
 </head>
 <body>
-    <video id="local-video" style="width:400px; height: 300px; border: 2px solid black;" autoplay></video>
-    <video id="remote-video" style="width:400px; height: 300px; border: 2px solid black;" autoplay></video>
+    <div id="videos">
+        
+    </div>
     <br />
     <br />
     <button id="start-video">Start video</button>
+    <button id="stop-video">Stop video</button>
 
-    <script src="~/js/signalr/dist/browser/signalr.js"></script>
+    <script src="~/js/signalr/dist/browser/signalr.min.js"></script>
     <script type="text/javascript">
         function onSuccess() { };
         function onError(error) {
@@ -19,13 +21,15 @@
         };
 
         let startVideo = document.getElementById("start-video"),
-            localVideo = document.getElementById("local-video"),
-            remoteVideo = document.getElementById("remote-video"),
+            stopVideo = document.getElementById("stop-video"),
+            localVideo,
+            remoteVideo,
+            videos = document.getElementById("videos"),
             configuration = {
                 'iceServers':
                     [{ 'url': 'stun:stun.services.mozilla.com' }, { 'url': 'stun:stun.l.google.com:19302' }]
             },
-            pc = new RTCPeerConnection(configuration);;
+            pc = new RTCPeerConnection(configuration);
 
         const hubConnection = new signalR.HubConnectionBuilder()
             .withUrl("/signal")
@@ -41,17 +45,9 @@
             );
         }
 
-        startVideo.addEventListener("click", () => {
-
-            pc.onicecandidate = event => {
-                if (event.candidate) {
-                    hubConnection.invoke("Send", { 'candidate': event.candidate });
-                }
-            };
-
-            pc.onnegotiationneeded = () => {
-                pc.createOffer().then(localDescCreated).catch(onError);
-            }
+        startVideo.addEventListener("click", event => {
+            videos.innerHTML = "<video id=\"local-video\" style=\"width: 400px; height: 300px; border: 2px solid black;\" autoplay></video>";
+            localVideo = document.getElementById("local-video");
 
             navigator.mediaDevices.getUserMedia({
                 audio: true,
@@ -62,12 +58,27 @@
             }, onError);
         });
 
+        pc.onicecandidate = event => {
+            if (event.candidate) {
+                hubConnection.invoke("Send", { 'candidate': event.candidate });
+            }
+        };
+
+        pc.onnegotiationneeded = event => {
+            pc.createOffer().then(localDescCreated).catch(onError);
+        }
+
+        pc.onconnectionstatechange = e => {
+            console.log(pc.connectionState);
+        }
+
         pc.onaddstream = event => {
+            videos.innerHTML = "<video id=\"remote-video\" style=\"width: 400px; height: 300px; border: 2px solid black;\" autoplay></video>";
+            remoteVideo = document.getElementById("remote-video");
             remoteVideo.srcObject = event.stream;
         };
 
         hubConnection.on("Send", data => {
-            console.log(data);
             if (data.sdp) {
                 pc.setRemoteDescription(new RTCSessionDescription(data.sdp), () => {
                     if (pc.remoteDescription.type === 'offer') {
@@ -79,6 +90,11 @@
                     new RTCIceCandidate(data.candidate), onSuccess, onError
                 );
             }
+        });
+
+        stopVideo.addEventListener("click", event => {
+            localVideo.srcObject.getTracks().forEach(track => track.stop());
+            localVideo.src = "";
         });
     </script>
 </body>

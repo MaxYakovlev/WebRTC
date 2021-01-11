@@ -12,5 +12,12 @@ namespace WebRTC.Hubs
         {
             await Clients.Others.SendAsync("Send", data);
         }
+
+        public override async Task OnConnectedAsync()
+        {
+            await base.OnConnectedAsync();
+
+            await Clients.Others.SendAsync("Connect", Context.ConnectionId);
+        }
     }
 }
