@@ -72,10 +72,6 @@
             pc.createOffer().then(localDescCreated).catch(onError);
         }
 
-        pc.onconnectionstatechange = e => {
-            console.log(pc.connectionState);
-        }
-
         pc.onaddstream = event => {
             let video = document.createElement("video");
             video.setAttribute("id", "remote-video");
