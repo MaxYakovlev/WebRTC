@@ -46,7 +46,11 @@
         }
 
         startVideo.addEventListener("click", event => {
-            videos.innerHTML = "<video id=\"local-video\" style=\"width: 400px; height: 300px; border: 2px solid black;\" autoplay></video>";
+            let video = document.createElement("video");
+            video.setAttribute("id", "local-video");
+            video.setAttribute("style", "width: 400px; height: 300px; border: 2px solid black;");
+            video.setAttribute("autoplay", "");
+            videos.appendChild(video);
             localVideo = document.getElementById("local-video");
 
             navigator.mediaDevices.getUserMedia({
@@ -73,7 +77,11 @@
         }
 
         pc.onaddstream = event => {
-            videos.innerHTML = "<video id=\"remote-video\" style=\"width: 400px; height: 300px; border: 2px solid black;\" autoplay></video>";
+            let video = document.createElement("video");
+            video.setAttribute("id", "remote-video");
+            video.setAttribute("style", "width: 400px; height: 300px; border: 2px solid black;");
+            video.setAttribute("autoplay", "");
+            videos.appendChild(video);
             remoteVideo = document.getElementById("remote-video");
             remoteVideo.srcObject = event.stream;
         };
